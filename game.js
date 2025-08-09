@@ -4,13 +4,14 @@ const ctx = cvs.getContext('2d');
 
 // --- Assets ---
 // Put your images in ./images/ with these names
+
 const ASSETS = {
-  bgDay: 'images/bg_day.png',
-  bgNight: 'images/bg_night.png',
-  player: 'images/player.png',
-  coin: 'images/coin.png',
-  heart: 'images/heart.png',
-  spider: 'images/spider.png',
+  bgDay: 'bg_day.png',
+  bgNight: 'bg_night.png',
+  player: 'player.png',
+  coin: 'coin.png',
+  heart: 'heart.png',
+  spider: 'spider.png',
 };
 
 function loadImage(src){
