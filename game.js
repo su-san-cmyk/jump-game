@@ -1,3 +1,10 @@
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+if (isMobile) {
+  document.addEventListener('touchstart', e => e.preventDefault(), { passive:false });
+  document.addEventListener('touchmove',  e => e.preventDefault(), { passive:false });
+  document.addEventListener('gesturestart', e => e.preventDefault());
+}
+
 // --- Canvas setup ---
 const cvs = document.getElementById('game');
 const ctx = cvs.getContext('2d');
