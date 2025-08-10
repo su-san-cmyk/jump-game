@@ -51,7 +51,9 @@ let items = [];     // coins/hearts
 let frame = 0;
 let score = 0;
 let coins = 0;
-let lives = 3;
+let maxLives = 3;     // 最大体力
+let lives = maxLives; // 現在体力
+
 let gameOver = false;
 let speed = 5;
 
@@ -78,7 +80,10 @@ cvs.addEventListener('pointerdown', ()=>{
 
 function resetGame(){
   player.y = 300; player.dy = 0; player.jumpsLeft = 2;
-  obstacles = []; items = []; frame = 0; score = 0; coins = 0; lives = 3; gameOver = false; speed = 5;
+  obstacles = []; items = []; frame = 0; score = 0; coins = 0;
+  maxLives = 3;                 // 最大体力は3から
+  lives    = maxLives;          // 現在体力も満タン
+  gameOver = false; speed = 5;
 }
 
 // helpers
@@ -129,12 +134,18 @@ function update(){
     const it = items[i]; it.x -= speed;
     const pw = player.w * HITBOX_SCALE, ph = player.h * HITBOX_SCALE;
     const px = player.x + (player.w - pw)/2, py = player.y + (player.h - ph)/2;
-    if (aabb(px,py,pw,ph, it.x, it.y, it.r*2, it.r*2)){
-      if (it.type==='coin'){ score += 100; coins++; if (coins>=10){ lives = Math.min(3, lives+1); coins = 0; } }
-      if (it.type==='heart'){ lives = Math.min(3, lives+1); }
-      items.splice(i,1); i--; continue;
-    }
-  }
+    if (it.type==='coin'){
+   score += 100;
+   coins++;
+   if (coins >= 10){
+     coins = 0;
+     if (lives < maxLives) lives++;   // 上限は超えない
+   }
+ }
+ if (it.type==='heart'){
+   maxLives += 1;        // 最大体力が増える
+   lives    = maxLives;  // 取得時は満タンに
+ }
 
   obstacles = obstacles.filter(o => o.x + o.w > 0);
   items     = items.filter(it => it.x + it.r*2 > 0);
@@ -188,9 +199,22 @@ function drawUI(){
   ctx.fillStyle = '#000'; ctx.font = '18px Arial';
   ctx.fillText('Score: '+score, 12, 26);
   ctx.fillText('Coins: '+coins+'/10', 12, 48);
-  // hearts
-  for (let i=0;i<lives;i++){
-    ctx.beginPath(); ctx.arc(200+i*18, 20, 7, 0, Math.PI*2); ctx.fillStyle = '#e64b4b'; ctx.fill();
+ // hearts（最大体力=枠、現在体力=赤）
+  const baseX = 200;
+  for (let i = 0; i < maxLives; i++){
+    const x = baseX + i * 18;
+    // 枠（空きスロット）
+    ctx.beginPath();
+   ctx.arc(x, 20, 7, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(230,75,75,0.25)'; // 薄い赤で空表示
+    ctx.fill();
+    // 現在体力ぶんだけ上書きで濃く塗る
+    if (i < lives){
+      ctx.beginPath();
+      ctx.arc(x, 20, 7, 0, Math.PI*2);
+      ctx.fillStyle = '#e64b4b';
+      ctx.fill();
+    }
   }
 
   if (gameOver){
