@@ -129,7 +129,8 @@ function update(){
     });
   }
   if (frame % 180 === 0) items.push({type:'coin',  x: W, y: 260 - Math.random()*120, r: 16});
-  if (frame % 600 === 0) items.push({type:'heart', x: W, y: 240 - Math.random()*100, r: 16});
+  if (frame % 1200 === 0) items.push({type:'heart', x: W, y: 240 - Math.random()*100, r: 16});//20秒に1回（600→1200)
+  
 
   // move obstacles
   for (let i=0;i<obstacles.length;i++){
