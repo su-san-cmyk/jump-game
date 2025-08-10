@@ -1,12 +1,3 @@
-// =====================
-//  game.js (full file)
-//  - スマホは画面固定
-//  - ハート取得: 最大体力 +1（その場で満タン）
-//  - コイン10枚: 現在体力 +1（上限は超えない）
-//  - 二段ジャンプ / 徐々にスピードUP / 昼夜ブレンド
-// =====================
-
-// --- Mobile: lock scrolling on phones only ---
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 if (isMobile) {
   document.addEventListener('touchstart', e => e.preventDefault(), { passive:false });
@@ -18,24 +9,27 @@ if (isMobile) {
 const cvs = document.getElementById('game');
 const ctx = cvs.getContext('2d');
 
-// --- Assets (画像はリポジトリ直下に配置する想定) ---
+// --- Assets ---
+// Put your images in ./images/ with these names
+
 const ASSETS = {
-  bgDay:   'bg_day.png',
+  bgDay: 'bg_day.png',
   bgNight: 'bg_night.png',
-  player:  'player.png',
-  coin:    'coin.png',
-  heart:   'heart.png',
-  spider:  'spider.png',
+  player: 'player.png',
+  coin: 'coin.png',
+  heart: 'heart.png',
+  spider: 'spider.png',
 };
 
 function loadImage(src){
   return new Promise((resolve, reject)=>{
     const img = new Image();
     img.onload = ()=> resolve(img);
-    img.onerror = ()=> reject(new Error('load error: ' + src));
+    img.onerror = reject;
     img.src = src;
   });
 }
+
 async function loadAssets(){
   const keys = Object.keys(ASSETS);
   const imgs = await Promise.all(keys.map(k => loadImage(ASSETS[k])));
@@ -44,14 +38,11 @@ async function loadAssets(){
   return out;
 }
 
-// --- Game constants/state ---
+// --- Game state ---
 const W = 800, H = 400;
 const GROUND_Y = 350;
 const BASE_SIZE = 64;
 const HITBOX_SCALE = 0.82;
-
-const START_MAX_LIVES = 3; // 初期の最大体力
-const MAX_LIVES_CAP   = 10; // 最大体力の上限（必要なければ大きくしてOK）
 
 let player = { x: 60, y: 300, w: BASE_SIZE, h: BASE_SIZE, dy: 0, jumpsLeft: 2 };
 let obstacles = []; // spiders
@@ -60,15 +51,14 @@ let items = [];     // coins/hearts
 let frame = 0;
 let score = 0;
 let coins = 0;
-let maxLives = START_MAX_LIVES; // 最大体力
-let lives    = maxLives;        // 現在体力
+let lives = 3;
 let gameOver = false;
 let speed = 5;
 
 let t = 0;             // for day/night
 let bgScroll = 0;      // background scroll
 
-// --- Input ---
+// input
 function jump(){
   if (gameOver) return;
   if (player.jumpsLeft > 0){
@@ -76,6 +66,7 @@ function jump(){
     player.jumpsLeft--;
   }
 }
+
 document.addEventListener('keydown', (e)=>{
   if (e.code === 'Space'){ e.preventDefault(); jump(); }
   if (gameOver && e.code === 'Enter') resetGame();
@@ -85,22 +76,16 @@ cvs.addEventListener('pointerdown', ()=>{
   jump();
 });
 
-// --- Helpers ---
-function aabb(ax,ay,aw,ah,bx,by,bw,bh){
-  return ax < bx + bw && ax + aw > bx &&
-         ay < by + bh && ay + ah > by;
-}
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
 function resetGame(){
   player.y = 300; player.dy = 0; player.jumpsLeft = 2;
-  obstacles = []; items = []; frame = 0; score = 0; coins = 0;
-  maxLives = START_MAX_LIVES;
-  lives    = maxLives;
-  gameOver = false; speed = 5; t = 0; bgScroll = 0;
+  obstacles = []; items = []; frame = 0; score = 0; coins = 0; lives = 3; gameOver = false; speed = 5;
 }
 
-// --- Update ---
+// helpers
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
 function update(){
   if (gameOver) return;
 
@@ -119,13 +104,7 @@ function update(){
     const size = 48;
     const mode = Math.random() < 0.6 ? 'swing' : 'drop';
     const baseLen = 100 + Math.floor(Math.random()*160);
-    obstacles.push({
-      type:'spider', mode,
-      x: W, y: baseLen, w: size, h: size,
-      t: Math.random()*Math.PI*2,
-      amp: 22 + Math.random()*24,
-      vy: 4 + Math.random()*2
-    });
+    obstacles.push({ type:'spider', mode, x: W, y: baseLen, w: size, h: size, t: Math.random()*Math.PI*2, amp: 22+Math.random()*24, vy: 4+Math.random()*2 });
   }
   if (frame % 180 === 0) items.push({type:'coin',  x: W, y: 260 - Math.random()*120, r: 16});
   if (frame % 600 === 0) items.push({type:'heart', x: W, y: 240 - Math.random()*100, r: 16});
@@ -141,9 +120,7 @@ function update(){
     const pw = player.w * HITBOX_SCALE, ph = player.h * HITBOX_SCALE;
     const px = player.x + (player.w - pw)/2, py = player.y + (player.h - ph)/2;
     if (aabb(px,py,pw,ph, o.x,o.y,o.w,o.h)){
-      lives--; obstacles.splice(i,1); i--;
-      if (lives<=0) gameOver = true;
-      continue;
+      lives--; obstacles.splice(i,1); i--; if (lives<=0) gameOver = true; continue;
     }
   }
 
@@ -152,25 +129,10 @@ function update(){
     const it = items[i]; it.x -= speed;
     const pw = player.w * HITBOX_SCALE, ph = player.h * HITBOX_SCALE;
     const px = player.x + (player.w - pw)/2, py = player.y + (player.h - ph)/2;
-
     if (aabb(px,py,pw,ph, it.x, it.y, it.r*2, it.r*2)){
-      if (it.type==='coin'){
-        // スコア & コインカウント
-        score += 100;
-        coins++;
-        // 10枚で現在体力+1（上限は最大体力まで）
-        if (coins >= 10){
-          coins = 0;
-          lives = clamp(lives + 1, 0, maxLives);
-        }
-      }
-      if (it.type==='heart'){
-        // 最大体力 +1（上限あり）& 現在体力を満タンに
-        maxLives = clamp(maxLives + 1, 1, MAX_LIVES_CAP);
-        lives    = maxLives;
-      }
-      items.splice(i,1); i--;
-      continue;
+      if (it.type==='coin'){ score += 100; coins++; if (coins>=10){ lives = Math.min(3, lives+1); coins = 0; } }
+      if (it.type==='heart'){ lives = Math.min(3, lives+1); }
+      items.splice(i,1); i--; continue;
     }
   }
 
@@ -183,24 +145,24 @@ function update(){
   if (frame % 300 === 0) speed += 0.2;
 }
 
-// --- Draw ---
 function drawBackground(imgDay, imgNight){
   // blend between day & night
   const phase = (Math.sin(t/300)+1)/2; // 0..1
+  // scrolling: draw two tiles for wrap
   const x1 = -bgScroll, x2 = x1 + W;
-  // day
+  // base day
   ctx.drawImage(imgDay, x1, 0, W, H);
   ctx.drawImage(imgDay, x2, 0, W, H);
-  // night overlay
+  // overlay night with alpha
   ctx.save();
-  ctx.globalAlpha = 1 - phase;
+  ctx.globalAlpha = 1 - phase; // night dominates when phase is small
   ctx.drawImage(imgNight, x1, 0, W, H);
   ctx.drawImage(imgNight, x2, 0, W, H);
   ctx.restore();
 }
 
 function drawSprites(assets){
-  // ground strip
+  // ground strip (fake)
   ctx.fillStyle = '#2e6b2e';
   ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
 
@@ -217,8 +179,8 @@ function drawSprites(assets){
 
   // items
   for (const it of items){
-    if (it.type==='coin')  ctx.drawImage(AS.imgs.coin,  it.x, it.y, it.r*2, it.r*2);
-    if (it.type==='heart') ctx.drawImage(AS.imgs.heart, it.x, it.y, it.r*2, it.r*2);
+    if (it.type==='coin')  ctx.drawImage(assets.coin,  it.x, it.y, it.r*2, it.r*2);
+    if (it.type==='heart') ctx.drawImage(assets.heart, it.x, it.y, it.r*2, it.r*2);
   }
 }
 
@@ -226,21 +188,9 @@ function drawUI(){
   ctx.fillStyle = '#000'; ctx.font = '18px Arial';
   ctx.fillText('Score: '+score, 12, 26);
   ctx.fillText('Coins: '+coins+'/10', 12, 48);
-
-  // hearts: 最大体力＝薄い枠、現在体力＝濃い赤
-  const baseX = 200;
-  for (let i = 0; i < maxLives; i++){
-    const x = baseX + i * 18;
-    ctx.beginPath();
-    ctx.arc(x, 20, 7, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(230,75,75,0.25)'; // 空スロット
-    ctx.fill();
-    if (i < lives){
-      ctx.beginPath();
-      ctx.arc(x, 20, 7, 0, Math.PI*2);
-      ctx.fillStyle = '#e64b4b';          // 現在体力
-      ctx.fill();
-    }
+  // hearts
+  for (let i=0;i<lives;i++){
+    ctx.beginPath(); ctx.arc(200+i*18, 20, 7, 0, Math.PI*2); ctx.fillStyle = '#e64b4b'; ctx.fill();
   }
 
   if (gameOver){
@@ -252,15 +202,17 @@ function drawUI(){
   }
 }
 
-// --- Main Loop ---
-const AS = { imgs:null };
 async function main(){
-  AS.imgs = await loadAssets();
+  const assets = await loadAssets();
   function loop(){
     update();
+    // clear
     ctx.clearRect(0,0,W,H);
-    drawBackground(AS.imgs.bgDay, AS.imgs.bgNight);
-    drawSprites(AS);
+    // bg
+    drawBackground(assets.bgDay, assets.bgNight);
+    // sprites
+    drawSprites(assets);
+    // ui
     drawUI();
     requestAnimationFrame(loop);
   }
@@ -271,5 +223,5 @@ main().catch(err=>{
   console.error(err);
   ctx.fillStyle = 'red';
   ctx.font = '16px monospace';
-  ctx.fillText('Asset load error. Check file paths.', 10, 24);
+  ctx.fillText('Asset load error. Check file paths in images/.', 10, 24);
 });
