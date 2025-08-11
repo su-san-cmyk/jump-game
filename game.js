@@ -211,16 +211,38 @@ function update(){
 
 // --- Draw ---
 function drawBackground(imgDay, imgNight){
+  // スクロール位置は整数にスナップ（念のため）
+  const s  = (bgScroll | 0);      // = Math.floor(bgScroll)
+  const x1 = -s;
+  const x2 = x1 + W;
+
+  // 1pxオーバーラップで隙間を物理的に潰す
+  const destW = W + 1;
+
+  // 昼
+  ctx.drawImage(imgDay,   x1, 0, destW, H);
+  ctx.drawImage(imgDay,   x2, 0, destW, H);
+
+  // 夜（ブレンド）
   const phase = (Math.sin(t/300)+1)/2; // 0..1
-  const x1 = -bgScroll, x2 = x1 + W;
-  ctx.drawImage(imgDay, x1, 0, W, H);
-  ctx.drawImage(imgDay, x2, 0, W, H);
   ctx.save();
   ctx.globalAlpha = 1 - phase;
-  ctx.drawImage(imgNight, x1, 0, W, H);
-  ctx.drawImage(imgNight, x2, 0, W, H);
+  ctx.drawImage(imgNight, x1, 0, destW, H);
+  ctx.drawImage(imgNight, x2, 0, destW, H);
   ctx.restore();
 }
+
+//function drawBackground(imgDay, imgNight){
+  //const phase = (Math.sin(t/300)+1)/2; // 0..1
+  //const x1 = -bgScroll, x2 = x1 + W;
+  //ctx.drawImage(imgDay, x1, 0, W, H);
+  //ctx.drawImage(imgDay, x2, 0, W, H);
+  //ctx.save();
+  //ctx.globalAlpha = 1 - phase;
+  //ctx.drawImage(imgNight, x1, 0, W, H);
+  //ctx.drawImage(imgNight, x2, 0, W, H);
+  //ctx.restore();
+//}
 
 function drawSprites(assets){
   ctx.fillStyle = '#2e6b2e';
