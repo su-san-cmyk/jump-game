@@ -134,7 +134,7 @@ function update(){
   }
 
   // spawn heart（レア）
-  if (Math.random() < 0.003) { // 0.3%（お好みで 0.001〜0.005 に調整）
+  if (Math.random() < 0.001) { // 0.1%（お好みで 0.001〜0.005 に調整）
     items.push({type:'heart', x: W, y: 240 - Math.random()*100, r: 16});
   }
 
