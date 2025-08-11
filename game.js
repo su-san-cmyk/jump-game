@@ -1,10 +1,11 @@
 // =====================
-//  game.js (meat & max HP)
+//  game.js (meat & max HP, heart by score)
 //  - スマホは画面固定（PCは従来通り）
-//  - ハート: 最大体力 +1（上限10）& その場で満タン、出現はレア（0.3%）
-//  - お肉10個: 現在体力 +1（上限は最大体力まで）
+//  - ハート: 最大体力 +1（上限10）& その場で満タン
+//  - ハート出現: ランダムではなくスコア到達で1個だけ出現
+//  - お肉10個: 現在体力 +1（最大体力まで）
 //  - 二段ジャンプ / 徐々にスピードUP / 昼夜ブレンド
-//  - 画像は「リポジトリ直下」に配置想定
+//  - 画像はリポジトリ直下想定
 // =====================
 
 // --- Mobile: lock scrolling on phones only ---
@@ -24,7 +25,7 @@ const ASSETS = {
   bgDay:   'bg_day.png',
   bgNight: 'bg_night.png',
   player:  'player.png',
-  meat:    'meat.png',   // ← ここがコインの代わり
+  meat:    'meat.png',   // ← コインの代わり
   heart:   'heart.png',
   spider:  'spider.png',
 };
@@ -51,8 +52,15 @@ const GROUND_Y = 350;
 const BASE_SIZE = 64;
 const HITBOX_SCALE = 0.82;
 
-const START_MAX_LIVES = 3;  // 初期最大体力
-const MAX_LIVES_CAP   = 10; // 最大体力上限
+const START_MAX_LIVES = 3;   // 初期最大体力
+const MAX_LIVES_CAP   = 10;  // 最大体力上限
+
+// ハートの“スコア出現”制御
+let nextHeartScore      = 3000; // 最初はスコア3000で1個出現（≈50秒目安）
+let lastHeartScore      = 0;    // 直近でハートを出したスコア
+const HEART_STEP_BASE   = 3500; // 次回必要スコアの基本加算
+const HEART_STEP_GROWTH = 1.15; // 必要スコアを少しずつ重くする係数
+const HEART_FAILSAFE_GAP = 6000; // 救済: このスコア間ハート無し＆ライフ1以下なら出す
 
 let player = { x: 60, y: 300, w: BASE_SIZE, h: BASE_SIZE, dy: 0, jumpsLeft: 2 };
 let obstacles = []; // spiders
@@ -98,6 +106,7 @@ function resetGame(){
   obstacles = []; items = []; frame = 0; score = 0; meats = 0;
   maxLives = START_MAX_LIVES; lives = maxLives;
   gameOver = false; speed = 5; t = 0; bgScroll = 0;
+  nextHeartScore = 3000; lastHeartScore = 0;
 }
 
 // --- Update ---
@@ -133,9 +142,21 @@ function update(){
     items.push({type:'meat',  x: W, y: 260 - Math.random()*120, r: 16});
   }
 
-  // spawn heart（レア）
-  if (Math.random() < 0.001) { // 0.1%（お好みで 0.001〜0.005 に調整）
-    items.push({type:'heart', x: W, y: 240 - Math.random()*100, r: 16});
+  // --- heart spawn by score rule ---
+  const heartOnScreen = items.some(it => it.type === 'heart');
+
+  // 通常出現: スコア到達 & 画面にハート無し & まだ満タンじゃない
+  if (!heartOnScreen && lives < maxLives && score >= nextHeartScore) {
+    items.push({ type:'heart', x: W, y: 240 - Math.random()*100, r: 16 });
+    lastHeartScore = score;
+    nextHeartScore = Math.floor(nextHeartScore + HEART_STEP_BASE * HEART_STEP_GROWTH);
+  }
+
+  // ピンチ救済: ライフ1以下 & 長らく出てない & 画面にハート無し
+  if (!heartOnScreen && lives <= 1 && (score - lastHeartScore) > HEART_FAILSAFE_GAP) {
+    items.push({ type:'heart', x: W, y: 240 - Math.random()*100, r: 16 });
+    lastHeartScore = score;
+    nextHeartScore = Math.floor(nextHeartScore + HEART_STEP_BASE * HEART_STEP_GROWTH);
   }
 
   // move obstacles
@@ -222,7 +243,7 @@ function drawSprites(assets){
 function drawUI(){
   ctx.fillStyle = '#000'; ctx.font = '18px Arial';
   ctx.fillText('Score: '+score, 12, 26);
-  ctx.fillText('お肉: '+meats+'/10', 12, 48);  // 表示もお肉に
+  ctx.fillText('お肉: '+meats+'/10', 12, 48);
   // hearts: 最大体力＝薄枠、現在体力＝濃い赤
   const baseX = 200;
   for (let i = 0; i < maxLives; i++){
