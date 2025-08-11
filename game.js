@@ -250,7 +250,7 @@ function drawSprites(assets){
   ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
 
   // 上向きに動いている（ジャンプ中）はジャンプ顔、その他は通常顔
-const sprite = (player.dy < -1) ? assets.playerJump : assets.player;
+const sprite = (player.jumpsLeft < 2 || player.dy !== 0) ? assets.playerJump : assets.player;
 ctx.drawImage(sprite, player.x, player.y, player.w, player.h);
 
 
