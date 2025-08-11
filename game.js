@@ -217,7 +217,7 @@ function drawBackground(imgDay, imgNight){
   const x2 = x1 + W;
 
   // 1pxオーバーラップで隙間を物理的に潰す
-  const destW = W + 1;
+  const destW = W + 2;
 
   // 昼
   ctx.drawImage(imgDay,   x1, 0, destW, H);
