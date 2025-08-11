@@ -25,6 +25,7 @@ const ASSETS = {
   bgDay:   'bg_day.png',
   bgNight: 'bg_night.png',
   player:  'player.png',
+  playerJump: 'player_jump.png',
   meat:    'meat.png',   // ← コインの代わり
   heart:   'heart.png',
   spider:  'spider.png',
@@ -248,7 +249,11 @@ function drawSprites(assets){
   ctx.fillStyle = '#2e6b2e';
   ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
 
-  ctx.drawImage(assets.player, player.x, player.y, player.w, player.h);
+  // 上向きに動いている（ジャンプ中）はジャンプ顔、その他は通常顔
+const sprite = (player.dy < -1) ? assets.playerJump : assets.player;
+ctx.drawImage(sprite, player.x, player.y, player.w, player.h);
+
+
 
   for (const o of obstacles){
     ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
