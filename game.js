@@ -211,24 +211,24 @@ function update(){
 
 // --- Draw ---
 function drawBackground(imgDay, imgNight){
-  // スクロール位置は整数にスナップ（念のため）
-  const s  = (bgScroll | 0);      // = Math.floor(bgScroll)
+  // スクロールは整数に（サブピクセル回避）
+  const s  = (bgScroll | 0);
   const x1 = -s;
   const x2 = x1 + W;
 
-  // 1pxオーバーラップで隙間を物理的に潰す
-  const destW = W + 2;
+  // 端の1pxを切り落として、重なり／隙間ゼロで貼り合わせる
+  const srcW = W - 1; // 右端1pxカット
 
-  // 昼
-  ctx.drawImage(imgDay,   x1, 0, destW, H);
-  ctx.drawImage(imgDay,   x2, 0, destW, H);
+  // --- Day ---
+  ctx.drawImage(imgDay,   0, 0, srcW, H, x1, 0, W, H);   // 左タイル: 左端～W-1px
+  ctx.drawImage(imgDay,   1, 0, srcW, H, x2, 0, W, H);   // 右タイル: 1px～W
 
-  // 夜（ブレンド）
+  // --- Night blend ---
   const phase = (Math.sin(t/300)+1)/2; // 0..1
   ctx.save();
   ctx.globalAlpha = 1 - phase;
-  ctx.drawImage(imgNight, x1, 0, destW, H);
-  ctx.drawImage(imgNight, x2, 0, destW, H);
+  ctx.drawImage(imgNight, 0, 0, srcW, H, x1, 0, W, H);
+  ctx.drawImage(imgNight, 1, 0, srcW, H, x2, 0, W, H);
   ctx.restore();
 }
 
