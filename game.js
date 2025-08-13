@@ -256,10 +256,16 @@ ctx.drawImage(sprite, player.x, player.y, player.w, player.h);
 }
 
 function drawUI(){
-  ctx.fillStyle = '#000'; ctx.font = '18px Arial';
-  ctx.fillText('Score: '+score, 12, 26);
-  ctx.fillText('お肉: '+meats+'/10', 12, 48);
-  // hearts: 最大体力＝薄枠、現在体力＝濃い赤
+  // 左上の通常UI
+  ctx.fillStyle = '#000';
+  ctx.font = '18px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  ctx.fillText('Score: ' + score, 12, 26);
+  ctx.fillText('お肉: ' + meats + '/10', 12, 48);
+
+  // ハートUI（最大体力＝薄、現在体力＝濃）
   const baseX = 200;
   for (let i = 0; i < maxLives; i++){
     const x = baseX + i * 18;
@@ -270,41 +276,37 @@ function drawUI(){
     if (i < lives){
       ctx.beginPath();
       ctx.arc(x, 20, 7, 0, Math.PI*2);
-      ctx.fillStyle = '#e64b4b';            // 現在体力
+      ctx.fillStyle = '#e64b4b';           // 現在体力
       ctx.fill();
     }
   }
 
+  // ─── GAME OVER オーバーレイ ───
   if (gameOver){
-    if (gameOver){
-  // 背景の暗幕
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(0, 0, W, H);
+    // 暗幕
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, W, H);
 
-  // 中央揃えで表示
-  ctx.fillStyle = '#fff';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+    // 中央表示
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-  // タイトル
-  ctx.font = '44px Arial';
-  ctx.fillText('GAME OVER', W/2, H/2 - 12);
+    ctx.font = '44px Arial';
+    ctx.fillText('GAME OVER', W/2, H/2 - 16);
 
-  // ★スコア（ここを追加）
-  ctx.font = '28px Arial';
-  ctx.fillText('Score: ' + score, W/2, H/2 + 22);
+    ctx.font = '28px Arial';
+    ctx.fillText('Score: ' + score, W/2, H/2 + 18);
 
-  // 再スタート案内
-  ctx.font = '18px Arial';
-  ctx.fillText('Enter/タップでリスタート', W/2, H/2 + 54);
+    ctx.font = '18px Arial';
+    ctx.fillText('Enter/タップでリスタート', W/2, H/2 + 48);
 
-  // もとに戻す（他の描画への影響回避）
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-}
-
+    // 念のため元に戻す（他の描画に影響しないように）
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
 }
+
 
 // --- Main Loop ---
 async function main(){
