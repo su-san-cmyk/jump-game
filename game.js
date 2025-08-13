@@ -233,18 +233,6 @@ function drawBackground(imgDay, imgNight){
   ctx.restore();
 }
 
-//function drawBackground(imgDay, imgNight){
-  //const phase = (Math.sin(t/300)+1)/2; // 0..1
-  //const x1 = -bgScroll, x2 = x1 + W;
-  //ctx.drawImage(imgDay, x1, 0, W, H);
-  //ctx.drawImage(imgDay, x2, 0, W, H);
-  //ctx.save();
-  //ctx.globalAlpha = 1 - phase;
-  //ctx.drawImage(imgNight, x1, 0, W, H);
-  //ctx.drawImage(imgNight, x2, 0, W, H);
-  //ctx.restore();
-//}
-
 function drawSprites(assets){
   ctx.fillStyle = '#2e6b2e';
   ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
@@ -288,11 +276,33 @@ function drawUI(){
   }
 
   if (gameOver){
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#fff'; ctx.font = '36px Arial';
-    ctx.fillText('GAME OVER', W/2 - 110, H/2);
-    ctx.font = '18px Arial';
-    ctx.fillText('Enter/タップでリスタート', W/2 - 120, H/2 + 34);
+    if (gameOver){
+  // 背景の暗幕
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, 0, W, H);
+
+  // 中央揃えで表示
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // タイトル
+  ctx.font = '44px Arial';
+  ctx.fillText('GAME OVER', W/2, H/2 - 12);
+
+  // ★スコア（ここを追加）
+  ctx.font = '28px Arial';
+  ctx.fillText('Score: ' + score, W/2, H/2 + 22);
+
+  // 再スタート案内
+  ctx.font = '18px Arial';
+  ctx.fillText('Enter/タップでリスタート', W/2, H/2 + 54);
+
+  // もとに戻す（他の描画への影響回避）
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
   }
 }
 
